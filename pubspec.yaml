@@ -1,0 +1,39 @@
+name: phone_repair_manager
+description: "نظام مصغر لإدارة محل صيانة الهواتف - حساب الأرباح والديون"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # قاعدة البيانات المحلية
+  sqflite: ^2.3.2
+  path: ^1.9.0
+
+  # لتنسيق الأرقام والتواريخ (بالعربية)
+  intl: ^0.19.0
+
+  # لإرسال الطلبات إلى Google Apps Script
+  http: ^1.2.1
+
+  # لإدارة الحالة (State Management) بشكل بسيط
+  provider: ^6.1.2
+
+  # لتوليد معرفات فريدة للعناصر
+  uuid: ^4.4.0
+
+  # لحفظ رمز الـ PIN محلياً على الهاتف بأمان بسيط
+  shared_preferences: ^2.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
