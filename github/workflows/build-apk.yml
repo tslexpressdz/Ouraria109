@@ -1,0 +1,42 @@
+name: بناء ملف APK تلقائياً
+
+# يشتغل هذا الملف تلقائياً في كل مرة تَرفع فيها كوداً جديداً إلى الفرع main
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # يسمح أيضاً بتشغيله يدوياً من تبويب Actions بزر واحد
+
+permissions:
+  contents: write # ضروري حتى يستطيع السكريبت إنشاء "Release" مع ملف الـ APK
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: تحميل الكود
+        uses: actions/checkout@v4
+
+      - name: تثبيت Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: توليد هيكل مشروع أندرويد (android/) تلقائياً
+        run: flutter create --platforms=android --org com.repairshop .
+
+      - name: تحميل الحزم (pub get)
+        run: flutter pub get
+
+      - name: بناء ملف APK (نسخة نهائية جاهزة للتثبيت)
+        run: flutter build apk --release
+
+      - name: نشر الـ APK في صفحة "Releases" برابط تحميل مباشر
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "نسخة رقم ${{ github.run_number }}"
+          body: "تم البناء تلقائياً. حمّل ملف app-release.apk أدناه وثبّته على هاتفك."
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
