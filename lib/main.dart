@@ -4,6 +4,7 @@ import 'providers/app_state.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/debts_screen.dart';
 import 'screens/orders_screen.dart';
+import 'screens/report_screen.dart';
 import 'screens/pin_gate.dart';
 
 void main() {
@@ -60,7 +61,7 @@ class PhoneRepairApp extends StatelessWidget {
   }
 }
 
-/// الحاوية الرئيسية التي تحتوي على 3 التبويبات
+/// الحاوية الرئيسية التي تحتوي على 4 التبويبات
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -75,6 +76,7 @@ class _HomeShellState extends State<HomeShell> {
     CalculatorScreen(),
     DebtsScreen(),
     OrdersScreen(),
+    ReportScreen(),
   ];
 
   @override
@@ -105,6 +107,11 @@ class _HomeShellState extends State<HomeShell> {
             icon: Icon(Icons.list_alt_outlined),
             selectedIcon: Icon(Icons.list_alt),
             label: 'الطلبات',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.summarize_outlined),
+            selectedIcon: Icon(Icons.summarize),
+            label: 'تقرير',
           ),
         ],
       ),
