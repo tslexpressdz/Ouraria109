@@ -21,9 +21,9 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
-      - name: توليد هيكل مشروع أندروي
-      run: flutter create --platforms=android --project-name phone_repair_manager --org com.repairshop .
-      
+      - name: توليد هيكل مشروع أندرويد
+        run: flutter create --platforms=android --project-name phone_repair_manager --org com.repairshop .
+
       - name: تحميل الحزم
         run: flutter pub get
 
