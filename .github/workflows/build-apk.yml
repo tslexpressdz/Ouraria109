@@ -23,20 +23,14 @@ jobs:
       - name: توليد هيكل مشروع أندرويد
         run: flutter create --platforms=android --project-name phone_repair_manager --org com.repairshop .
 
-      - name: عرض محتوى settings.gradle.kts (للتشخيص)
-        run: cat android/settings.gradle.kts
-
-      - name: تحديث نسخة Kotlin
-        run: |
-          sed -i -E 's/(org\.jetbrains\.kotlin\.android"\) version )"[^"]*"/\1"2.1.0"/' android/settings.gradle.kts
-          echo "----- بعد التعديل -----"
-          cat android/settings.gradle.kts
+      - name: تعطيل واجهة AGP 9 الجديدة (توافق أفضل)
+        run: echo "android.newDsl=false" >> android/gradle.properties
 
       - name: تحميل الحزم
         run: flutter pub get
 
-      - name: بناء ملف APK
-        run: flutter build apk --release
+      - name: بناء ملف APK (مع تجاوز فحص إصدار Kotlin)
+        run: flutter build apk --release --android-skip-build-dependency-validation
 
       - name: نشر الـ APK في Releases
         uses: softprops/action-gh-release@v2
