@@ -29,6 +29,9 @@ jobs:
       - name: تعطيل واجهة AGP 9 الجديدة (توافق أفضل)
         run: echo "android.newDsl=false" >> android/gradle.properties
 
+      - name: تبديل اسم التطبيق الظاهر تحت الأيقونة
+        run: sed -i 's/android:label="[^"]*"/android:label="Hakim_app"/' android/app/src/main/AndroidManifest.xml
+
       - name: تحميل الحزم
         run: flutter pub get
 
