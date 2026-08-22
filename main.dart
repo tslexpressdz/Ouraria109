@@ -7,6 +7,20 @@ import 'screens/orders_screen.dart';
 import 'screens/pin_gate.dart';
 
 void main() {
+  // إظهار الخطأ الحقيقي بالنص بدل مربع رمادي فارغ، لتسهيل تشخيص أي مشكلة لاحقاً
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(16),
+      alignment: Alignment.center,
+      child: Text(
+        'صار خطأ:\n\n${details.exceptionAsString()}',
+        style: const TextStyle(color: Colors.red, fontSize: 13),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      ),
+    );
+  };
   runApp(const PhoneRepairApp());
 }
 
@@ -20,7 +34,6 @@ class PhoneRepairApp extends StatelessWidget {
       child: MaterialApp(
         title: 'إدارة محل الصيانة',
         debugShowCheckedModeBanner: false,
-        locale: const Locale('ar'),
         // للحصول على واجهة من اليمين لليسار بشكل صحيح
         builder: (context, child) => Directionality(
           textDirection: TextDirection.rtl,
@@ -32,7 +45,6 @@ class PhoneRepairApp extends StatelessWidget {
             seedColor: const Color(0xFF2E7D6B), // أخضر مزرق عصري
             brightness: Brightness.light,
           ),
-          fontFamily: 'Cairo', // يمكن إضافة خط عربي عصري (اختياري - انظر README)
           appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
         ),
         darkTheme: ThemeData(
