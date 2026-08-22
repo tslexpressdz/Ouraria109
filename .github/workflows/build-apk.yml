@@ -18,11 +18,13 @@ jobs:
       - name: تثبيت Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
           channel: 'stable'
 
       - name: توليد هيكل مشروع أندرويد
         run: flutter create --platforms=android --project-name phone_repair_manager --org com.repairshop .
+
+      - name: تحديث نسخة Kotlin (لتفادي تعارض الإصدارات)
+        run: sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "2.1.0"/' android/settings.gradle
 
       - name: تحميل الحزم
         run: flutter pub get
