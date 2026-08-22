@@ -1,119 +1,77 @@
-/**
- * google_apps_script.gs
- * -----------------------------------------------------------------------
- * هذا السكريبت يُنشر كـ "Web App" داخل Google Sheets، ويستقبل طلبات POST
- * من تطبيق Flutter (عبر SheetsService) ويقوم بإضافة/تحديث البيانات
- * في الشيتات المناسبة.
- *
- * خطوات الإعداد موجودة بالتفصيل في README.md
- * -----------------------------------------------------------------------
- */
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/repair_order.dart';
+import '../models/debt.dart';
 
-// أسماء الشيتات المستخدمة داخل ملف Google Sheets
-const SHEET_NAMES = {
-  orders: 'العمليات',
-  debts: 'الديون',
-  weekly_reports: 'التقارير الأسبوعية',
-};
+/// خدمة إرسال البيانات إلى Google Sheets عبر Google Apps Script (Web App)
+class SheetsService {
+  // ⚠️ استبدل هذا الرابط برابط الـ Web App الخاص بك بعد نشر السكريبت
+  static const String scriptUrl =
+      'https://script.google.com/macros/s/PASTE_YOUR_DEPLOYMENT_ID_HERE/exec';
 
-/**
- * نقطة الدخول الرئيسية: تستقبل كل طلبات POST القادمة من التطبيق
- */
-function doPost(e) {
-  try {
-    const body = JSON.parse(e.postData.contents);
-    const sheetKey = body.sheet; // orders | debts | weekly_reports
-    const action = body.action; // upsert | append
-    const data = body.data;
+  static bool get isConfigured =>
+      !scriptUrl.contains('PASTE_YOUR_DEPLOYMENT_ID_HERE');
 
-    const sheetName = SHEET_NAMES[sheetKey];
-    if (!sheetName) {
-      return _jsonResponse({ok: false, error: 'اسم شيت غير معروف: ' + sheetKey});
-    }
-
-    const sheet = _getOrCreateSheet(sheetName, data);
-
-    if (action === 'upsert' && data.id) {
-      _upsertRow(sheet, data);
-    } else {
-      _appendRow(sheet, data);
-    }
-
-    return _jsonResponse({ok: true});
-  } catch (err) {
-    return _jsonResponse({ok: false, error: err.toString()});
+  static Future<bool> sendOrder(RepairOrder order) async {
+    return _post({
+      'sheet': 'orders',
+      'action': 'upsert',
+      'data': {
+        'id': order.id,
+        'التاريخ': order.createdAt.toIso8601String(),
+        'اسم الزبون': order.customerName,
+        'رقم الهاتف': order.customerPhone,
+        'نوع الهاتف': order.deviceType,
+        'القطعة': order.partName,
+        'سعر الشراء': order.purchasePrice,
+        'سعر البيع': order.sellPrice,
+        'العربون': order.deposit,
+        'المتبقي': order.remainingAmount,
+        'الفائدة الإجمالية': order.totalProfit,
+        'فائدتي': order.myProfitShare,
+        'فائدة الشريك': order.ownerProfitShare,
+        'الحالة': order.status.label,
+      },
+    });
   }
-}
 
-/**
- * يسمح بفتح الرابط من المتصفح للتأكد من أن الخدمة تعمل
- */
-function doGet(e) {
-  return ContentService.createTextOutput(
-    'خدمة ربط تطبيق إدارة محل الصيانة تعمل بنجاح ✅'
-  );
-}
-
-/**
- * يبحث عن الشيت المطلوب، وإن لم يكن موجوداً ينشئه مع صف العناوين
- */
-function _getOrCreateSheet(sheetName, sampleData) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(sheetName);
-  if (!sheet) {
-    sheet = ss.insertSheet(sheetName);
-    const headers = Object.keys(sampleData);
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    sheet.setFrozenRows(1);
+  static Future<bool> sendDebt(Debt debt) async {
+    return _post({
+      'sheet': 'debts',
+      'action': 'upsert',
+      'data': {
+        'id': debt.id,
+        'التاريخ': debt.createdAt.toIso8601String(),
+        'النوع': debt.type == DebtType.supplier ? 'مورد' : 'زبون',
+        'الاسم': debt.personName,
+        'المبلغ': debt.amount,
+        'ملاحظة': debt.note,
+        'مدفوع': debt.paid ? 'نعم' : 'لا',
+      },
+    });
   }
-  return sheet;
-}
 
-/**
- * إضافة صف جديد دائماً (تُستخدم للتقارير الأسبوعية)
- */
-function _appendRow(sheet, data) {
-  const headers = _getHeaders(sheet, data);
-  const row = headers.map((h) => (data[h] !== undefined ? data[h] : ''));
-  sheet.appendRow(row);
-}
+  static Future<bool> sendWeeklyReport(Map<String, dynamic> reportData) async {
+    return _post({
+      'sheet': 'weekly_reports',
+      'action': 'append',
+      'data': reportData,
+    });
+  }
 
-/**
- * تحديث الصف إن وُجد نفس id مسبقاً، وإلا إضافة صف جديد (تُستخدم للعمليات والديون)
- */
-function _upsertRow(sheet, data) {
-  const headers = _getHeaders(sheet, data);
-  const idColIndex = headers.indexOf('id') + 1;
-  const lastRow = sheet.getLastRow();
-
-  if (lastRow >= 2 && idColIndex > 0) {
-    const ids = sheet.getRange(2, idColIndex, lastRow - 1, 1).getValues();
-    for (let i = 0; i < ids.length; i++) {
-      if (ids[i][0] === data.id) {
-        const row = headers.map((h) => (data[h] !== undefined ? data[h] : ''));
-        sheet.getRange(i + 2, 1, 1, row.length).setValues([row]);
-        return;
-      }
+  static Future<bool> _post(Map<String, dynamic> body) async {
+    if (!isConfigured) {
+      return false;
+    }
+    try {
+      final response = await http.post(
+        Uri.parse(scriptUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
-  _appendRow(sheet, data);
-}
-
-function _getHeaders(sheet, data) {
-  const lastCol = sheet.getLastColumn();
-  if (lastCol === 0) {
-    const headers = Object.keys(data);
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-    return headers;
-  }
-  return sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-}
-
-function _jsonResponse(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
-    ContentService.MimeType.JSON
-  );
 }
