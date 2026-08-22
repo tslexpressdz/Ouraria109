@@ -1,1 +1,40 @@
+name: بناء ملف APK تلقائياً
 
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: تحميل الكود
+        uses: actions/checkout@v4
+
+      - name: تثبيت Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: توليد هيكل مشروع أندرويد
+        run: flutter create --platforms=android --org com.repairshop .
+
+      - name: تحميل الحزم
+        run: flutter pub get
+
+      - name: بناء ملف APK
+        run: flutter build apk --release
+
+      - name: نشر الـ APK في Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "نسخة رقم ${{ github.run_number }}"
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
