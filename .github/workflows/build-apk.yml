@@ -20,8 +20,11 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: توليد هيكل مشروع أندرويد
-        run: flutter create --platforms=android --project-name phone_repair_manager --org com.repairshop .
+      - name: توليد مجلد أندرويد في مكان منفصل (بدون المساس بالكود ديالنا)
+        run: |
+          flutter create --platforms=android --project-name phone_repair_manager --org com.repairshop /tmp/scaffold
+          cp -r /tmp/scaffold/android .
+          rm -rf /tmp/scaffold
 
       - name: تعطيل واجهة AGP 9 الجديدة (توافق أفضل)
         run: echo "android.newDsl=false" >> android/gradle.properties
