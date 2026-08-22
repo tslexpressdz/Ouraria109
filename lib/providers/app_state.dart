@@ -158,6 +158,10 @@ class AppState extends ChangeNotifier {
   double get totalSupplierDebt =>
       supplierDebts.fold<double>(0, (sum, d) => sum + d.amount);
 
+  /// مجموع أجر التوصيل المستحق (غير المدفوع بعد)
+  double get totalDeliveryDue =>
+      deliveryPersons.fold<double>(0, (sum, p) => sum + p.amountDue);
+
   /// الطلبات المُسلَّمة والمقبوضة بالكامل (تدخل في حساب الأسبوع الحالي)
   List<RepairOrder> get deliveredThisWeek =>
       orders.where((o) => o.status == OrderStatus.delivered).toList();
