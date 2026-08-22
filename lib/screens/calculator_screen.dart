@@ -23,14 +23,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   final _depositCtrl = TextEditingController(text: '0');
 
   double _remaining = 0;
-  double _totalProfit = 0;
-  double _myShare = 0;
-  double _ownerShare = 0;
 
   @override
   void initState() {
     super.initState();
-    for (final c in [_purchasePriceCtrl, _sellPriceCtrl, _depositCtrl]) {
+    for (final c in [_sellPriceCtrl, _depositCtrl]) {
       c.addListener(_recalculate);
     }
   }
@@ -38,16 +35,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   double _parse(String text) => double.tryParse(text.trim()) ?? 0;
 
   void _recalculate() {
-    final purchase = _parse(_purchasePriceCtrl.text);
     final sell = _parse(_sellPriceCtrl.text);
     final deposit = _parse(_depositCtrl.text);
 
     setState(() {
       final remaining = sell - deposit;
       _remaining = remaining < 0 ? 0 : remaining;
-      _totalProfit = sell - purchase;
-      _myShare = _totalProfit / 2;
-      _ownerShare = _totalProfit / 2;
     });
   }
 
@@ -140,7 +133,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             _numberField(_depositCtrl, 'المبلغ المدفوع مسبقاً (العربون)',
                 Icons.payments_outlined),
             const SizedBox(height: 24),
-            _resultsCard(theme),
+            _remainingCard(theme),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: _saveOrder,
@@ -148,6 +141,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               label: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Text('حفظ العملية', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                'حساب الفائدة وتوزيعها موجود فـ صفحة "تقرير"',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
             ),
             const SizedBox(height: 24),
@@ -207,7 +207,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
   }
 
-  Widget _resultsCard(ThemeData theme) {
+  Widget _remainingCard(ThemeData theme) {
     return Card(
       elevation: 0,
       color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
@@ -217,40 +217,20 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('النتائج التلقائية',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            _resultRow('المبلغ المتبقي على الزبون', _remaining,
-                color: theme.colorScheme.error),
-            _resultRow('صافي الفائدة الإجمالية المتوقعة', _totalProfit,
-                color: theme.colorScheme.primary),
-            const Divider(height: 24),
-            _resultRow('فائدتي الخاصة (50%)', _myShare,
-                color: Colors.green.shade700),
-            _resultRow('فائدة صاحب المحل (50%)', _ownerShare,
-                color: Colors.blue.shade700),
+            const Expanded(child: Text('المبلغ المتبقي على الزبون')),
+            Text(
+              formatCurrency(_remaining),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.error,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _resultRow(String label, double value, {required Color color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(child: Text(label)),
-          Text(
-            formatCurrency(value),
-            style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 15),
-          ),
-        ],
       ),
     );
   }
