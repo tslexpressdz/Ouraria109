@@ -16,6 +16,7 @@ class AppState extends ChangeNotifier {
   List<Debt> supplierDebts = [];
   List<Debt> customerDebts = [];
   List<DeliveryPerson> deliveryPersons = [];
+  List<DeliveryPerson> allDeliveryPersons = [];
   List<WeeklyReport> weeklyReports = [];
 
   bool isLoading = true;
@@ -32,6 +33,7 @@ class AppState extends ChangeNotifier {
     supplierDebts = await _db.getDebtsByType(DebtType.supplier);
     customerDebts = await _db.getDebtsByType(DebtType.customer);
     deliveryPersons = await _db.getUnpaidDeliveryPersons();
+    allDeliveryPersons = await _db.getAllDeliveryPersons();
     weeklyReports = await _db.getAllWeeklyReports();
 
     isLoading = false;
@@ -64,7 +66,6 @@ class AppState extends ChangeNotifier {
     );
     await _db.insertOrder(order);
 
-    // إذا بقي مبلغ على الزبون، يُضاف تلقائياً إلى ديون الزبائن
     if (order.remainingAmount > 0) {
       // لا ننشئ سجل دين منفصل هنا لأن شاشة الديون تعرض المتبقي من
       // طلبات الصيانة مباشرة + الديون اليدوية (انظر debts_screen.dart)
@@ -77,7 +78,7 @@ class AppState extends ChangeNotifier {
   Future<void> updateOrderStatus(RepairOrder order, OrderStatus newStatus) async {
     order.status = newStatus;
     if (newStatus == OrderStatus.delivered) {
-      order.deposit = order.sellPrice; // المبلغ المتبقي يصبح صفراً
+      order.deposit = order.sellPrice;
       order.deliveredAt = DateTime.now();
     }
     await _db.updateOrder(order);
@@ -138,12 +139,13 @@ class AppState extends ChangeNotifier {
 
   Future<void> markDeliveryPersonPaid(DeliveryPerson person) async {
     person.paid = true;
-    person.amountDue = 0;
+    // ملاحظة: ما نصفّرش amountDue، باش يبقى المبلغ محفوظ للتاريخ
+    // ويستمر يتخصم من الفائدة حتى بعد الدفع (الفائدة ما ترجعش تطلع)
     await _db.updateDeliveryPerson(person);
     await refresh();
   }
 
-  // ---------------- حسابات مجمّعة (تُستخدم في شاشة الغلق الأسبوعي) ----------------
+  // ---------------- حسابات مجمّعة ----------------
 
   /// مجموع الكريدي المتبقي في السوق عند الزبائن (من طلبات الصيانة + الديون اليدوية)
   double get totalCustomerDebt {
@@ -158,24 +160,39 @@ class AppState extends ChangeNotifier {
   double get totalSupplierDebt =>
       supplierDebts.fold<double>(0, (sum, d) => sum + d.amount);
 
-  /// مجموع أجر التوصيل المستحق (غير المدفوع بعد)
+  /// مجموع أجر التوصيل المستحق (غير المدفوع بعد) — لعرض من بقى عليه دفع
   double get totalDeliveryDue =>
       deliveryPersons.fold<double>(0, (sum, p) => sum + p.amountDue);
 
-  /// الطلبات المُسلَّمة والمقبوضة بالكامل (تدخل في حساب الأسبوع الحالي)
+  /// مجموع أجر التوصيل الكامل (مدفوع + غير مدفوع) — يُستخدم فحساب الفائدة
+  /// بشكل دائم، حتى لا تتغير الفائدة عند الضغط على "تم الدفع"
+  double get totalDeliveryCostEver =>
+      allDeliveryPersons.fold<double>(0, (sum, p) => sum + p.amountDue);
+
+  /// الطلبات المُسلَّمة والمقبوضة بالكامل
   List<RepairOrder> get deliveredThisWeek =>
       orders.where((o) => o.status == OrderStatus.delivered).toList();
 
   double get totalCollectedThisWeek =>
       deliveredThisWeek.fold<double>(0, (sum, o) => sum + o.sellPrice);
 
-  double get myProfitCollectedThisWeek =>
-      deliveredThisWeek.fold<double>(0, (sum, o) => sum + o.myProfitShare);
+  /// الفائدة الإجمالية قبل خصم أجر التوصيل
+  /// (مجموع سعر البيع - سعر الشراء لكل العمليات المخلَّصة)
+  double get grossProfitThisWeek =>
+      deliveredThisWeek.fold<double>(0, (sum, o) => sum + o.totalProfit);
 
-  double get ownerProfitCollectedThisWeek =>
-      deliveredThisWeek.fold<double>(0, (sum, o) => sum + o.ownerProfitShare);
+  /// الفائدة الصافية: أجر التوصيل يتخصم منها مرة واحدة بشكل دائم
+  /// (حتى بعد الدفع)، حتى لا يتغير رقم الفائدة عند الضغط على "تم الدفع"
+  double get netProfitThisWeek {
+    final net = grossProfitThisWeek - totalDeliveryCostEver;
+    return net < 0 ? 0 : net;
+  }
 
-  /// تنفيذ الغلق الأسبوعي: يبني التقرير، يرسله لجوجل شيت، ثم يؤرشف الطلبات المسلَّمة
+  double get myProfitCollectedThisWeek => netProfitThisWeek / 2;
+
+  double get ownerProfitCollectedThisWeek => netProfitThisWeek / 2;
+
+  /// تنفيذ الغلق الأسبوعي
   Future<Map<String, dynamic>> closeWeeklySession({
     required DateTime weekStart,
     required DateTime weekEnd,
@@ -207,7 +224,6 @@ class AppState extends ChangeNotifier {
     );
     await _db.insertWeeklyReport(report);
 
-    // تصفير الأسبوع: أرشفة الطلبات المسلَّمة حتى لا تُحتسب مجدداً
     await _db.archiveAllDeliveredOrders();
     await refresh();
 
