@@ -197,6 +197,14 @@ class DBHelper {
     return result.map((e) => DeliveryPerson.fromMap(e)).toList();
   }
 
+  /// كل عمال التوصيل (مدفوعين وغير مدفوعين) — تُستخدم لحساب التكلفة
+  /// الإجمالية لأجر التوصيل بشكل دائم في حساب الفائدة، حتى لو تم الدفع
+  Future<List<DeliveryPerson>> getAllDeliveryPersons() async {
+    final db = await database;
+    final result = await db.query('delivery_persons', orderBy: 'createdAt DESC');
+    return result.map((e) => DeliveryPerson.fromMap(e)).toList();
+  }
+
   // ---------------- التقارير الأسبوعية ----------------
 
   Future<void> insertWeeklyReport(WeeklyReport report) async {
