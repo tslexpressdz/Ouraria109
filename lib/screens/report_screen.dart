@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../utils/formatters.dart';
 
-/// صفحة "تقرير": تجمع المقبوضات، أجر التوصيل المستحق، ديون الموردين،
-/// المجموع الصافي، وفي الأخير توزيع الفائدة (فائدتك وفائدة صاحب المحل)
 class ReportScreen extends StatelessWidget {
   const ReportScreen({super.key});
 
@@ -18,6 +16,8 @@ class ReportScreen extends StatelessWidget {
     final totalDeliveryDue = appState.totalDeliveryDue;
     final totalSupplierDebt = appState.totalSupplierDebt;
     final netTotal = totalCollected - totalDeliveryDue - totalSupplierDebt;
+    final grossProfit = appState.grossProfitThisWeek;
+    final netProfit = appState.netProfitThisWeek;
     final myProfit = appState.myProfitCollectedThisWeek;
     final ownerProfit = appState.ownerProfitCollectedThisWeek;
 
@@ -26,7 +26,6 @@ class ReportScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // 1. المبالغ المقبوضة
           _summaryCard(
             theme,
             icon: Icons.payments_outlined,
@@ -39,7 +38,6 @@ class ReportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 2. أجر التوصيل
           _summaryCard(
             theme,
             icon: Icons.delivery_dining_outlined,
@@ -76,7 +74,6 @@ class ReportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 3. ديون الموردين
           _summaryCard(
             theme,
             icon: Icons.local_shipping_outlined,
@@ -114,7 +111,6 @@ class ReportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 4. المجموع الصافي
           Card(
             elevation: 0,
             color: theme.colorScheme.tertiaryContainer.withOpacity(0.4),
@@ -143,12 +139,17 @@ class ReportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 5. توزيع الفائدة
           _summaryCard(
             theme,
             icon: Icons.pie_chart_outline,
             title: 'توزيع الفائدة',
             children: [
+              _row('الفائدة الإجمالية (قبل الخصم)', formatCurrency(grossProfit)),
+              _row('ناقص: أجر التوصيل',
+                  '- ${formatCurrency(appState.totalDeliveryCostEver)}'),
+              const Divider(),
+              _row('الفائدة الصافية', formatCurrency(netProfit), bold: true),
+              const SizedBox(height: 4),
               _row('فائدتي', formatCurrency(myProfit),
                   bold: true, color: Colors.green.shade700),
               _row('فائدة صاحب المحل', formatCurrency(ownerProfit),
