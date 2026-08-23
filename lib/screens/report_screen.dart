@@ -120,18 +120,28 @@ class ReportScreen extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('المجموع الصافي',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('الصندوق (بعد تسديد الديون الحالية)',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text(
+                        formatCurrency(netTotal),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(
-                    formatCurrency(netTotal),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: theme.colorScheme.primary,
-                    ),
+                    'ملاحظة: هذا رقم السيولة، ماشي الفائدة — شوف "توزيع الفائدة" تحت لمعرفة فائدتك الحقيقية',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
                   ),
                 ],
               ),
