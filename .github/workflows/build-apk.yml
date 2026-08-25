@@ -26,6 +26,14 @@ jobs:
           cp -r /tmp/scaffold/android .
           rm -rf /tmp/scaffold
 
+      - name: إنشاء مفتاح توقيع Debug (إن لم يكن موجوداً)
+        run: |
+          mkdir -p ~/.android
+          keytool -genkeypair -v -keystore ~/.android/debug.keystore \
+            -storepass android -alias androiddebugkey -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
       - name: تعطيل واجهة AGP 9 الجديدة (توافق أفضل)
         run: echo "android.newDsl=false" >> android/gradle.properties
 
