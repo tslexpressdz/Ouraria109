@@ -6,9 +6,9 @@ import 'screens/debts_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/report_screen.dart';
 import 'screens/pin_gate.dart';
+import 'screens/google_signin_gate.dart';
 
 void main() {
-  // إظهار الخطأ الحقيقي بالنص بدل مربع رمادي فارغ، لتسهيل تشخيص أي مشكلة لاحقاً
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return Container(
       color: Colors.white,
@@ -35,7 +35,6 @@ class PhoneRepairApp extends StatelessWidget {
       child: MaterialApp(
         title: 'إدارة محل الصيانة',
         debugShowCheckedModeBanner: false,
-        // للحصول على واجهة من اليمين لليسار بشكل صحيح
         builder: (context, child) => Directionality(
           textDirection: TextDirection.rtl,
           child: child!,
@@ -43,7 +42,7 @@ class PhoneRepairApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2E7D6B), // أخضر مزرق عصري
+            seedColor: const Color(0xFF2E7D6B),
             brightness: Brightness.light,
           ),
           appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
@@ -55,7 +54,7 @@ class PhoneRepairApp extends StatelessWidget {
             brightness: Brightness.dark,
           ),
         ),
-        home: const PinGate(child: HomeShell()),
+        home: const PinGate(child: GoogleSignInGate(child: HomeShell())),
       ),
     );
   }
