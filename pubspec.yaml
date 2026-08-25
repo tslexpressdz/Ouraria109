@@ -30,6 +30,11 @@ dependencies:
   # لحفظ رمز الـ PIN محلياً على الهاتف بأمان بسيط
   shared_preferences: ^2.2.3
 
+  # تسجيل الدخول بحساب Google وإنشاء شيت خاص بكل مستخدم لوحده
+  google_sign_in: 6.2.1
+  googleapis: 13.2.0
+  extension_google_sign_in_as_googleapis_auth: 2.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
