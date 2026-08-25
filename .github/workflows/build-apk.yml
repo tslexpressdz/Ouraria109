@@ -38,6 +38,9 @@ jobs:
       - name: بناء ملف APK (مع تجاوز فحص إصدار Kotlin)
         run: flutter build apk --release --android-skip-build-dependency-validation
 
+      - name: عرض بصمة SHA-1 لشهادة التوقيع (Debug)
+        run: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+
       - name: نشر الـ APK في Releases
         uses: softprops/action-gh-release@v2
         with:
