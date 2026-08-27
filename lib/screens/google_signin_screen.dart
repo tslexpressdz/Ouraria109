@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/sheets_service.dart';
 
-/// شاشة تُعرض عند أول تشغيل (أو إذا لم يكن المستخدم مسجلاً دخوله بعد):
-/// تطلب تسجيل الدخول بحساب Google لإنشاء/فتح شيت خاص بالمستخدم
 class GoogleSignInScreen extends StatefulWidget {
   final VoidCallback onSignedIn;
   const GoogleSignInScreen({super.key, required this.onSignedIn});
@@ -26,7 +24,8 @@ class _GoogleSignInScreenState extends State<GoogleSignInScreen> {
     if (ok) {
       widget.onSignedIn();
     } else {
-      setState(() => _error = 'تعذر تسجيل الدخول، حاول مرة أخرى');
+      setState(() => _error =
+          'تعذر تسجيل الدخول:\n${SheetsService.lastError ?? "خطأ غير معروف"}');
     }
   }
 
