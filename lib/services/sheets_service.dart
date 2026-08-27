@@ -5,9 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/repair_order.dart';
 import '../models/debt.dart';
 
-/// خدمة الاتصال بـ Google Sheets: كل مستخدم يسجل دخوله بحساب Google
-/// الخاص به، والتطبيق ينشئ له تلقائياً شيت خاص به هو (أو يستعمل الشيت
-/// الذي أنشأه من قبل)، بلا أي رابط ثابت مشترك بين المستخدمين.
 class SheetsService {
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [sheets.SheetsApi.spreadsheetsScope],
@@ -29,7 +26,6 @@ class SheetsService {
     'weekly_reports': 'التقارير الأسبوعية',
   };
 
-  /// محاولة صامتة لتسجيل الدخول (إذا كان المستخدم سجل من قبل، بلا نافذة اختيار)
   static Future<bool> signInSilently() async {
     try {
       final account = await _googleSignIn.signInSilently();
@@ -41,14 +37,20 @@ class SheetsService {
     }
   }
 
-  /// تسجيل دخول تفاعلي (يفتح نافذة اختيار حساب Google)
+  static String? lastError;
+
   static Future<bool> signIn() async {
+    lastError = null;
     try {
       final account = await _googleSignIn.signIn();
-      if (account == null) return false;
+      if (account == null) {
+        lastError = 'المستخدم ألغى تسجيل الدخول (account == null)';
+        return false;
+      }
       await _afterSignIn(account);
       return true;
-    } catch (_) {
+    } catch (e) {
+      lastError = e.toString();
       return false;
     }
   }
@@ -77,7 +79,7 @@ class SheetsService {
         _spreadsheetId = savedId;
         return;
       } catch (_) {
-        savedId = null; // الشيت القديم ما عادش موجود، ننشئوا واحد جديد
+        savedId = null;
       }
     }
 
