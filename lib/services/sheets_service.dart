@@ -7,9 +7,9 @@ import '../models/debt.dart';
 
 class SheetsService {
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [sheets.SheetsApi.spreadsheetsScope],
+    scopes: ['email'], // اختبار تشخيصي مؤقت
   );
-
+  
   static GoogleSignInAccount? _account;
   static sheets.SheetsApi? _api;
   static String? _spreadsheetId;
